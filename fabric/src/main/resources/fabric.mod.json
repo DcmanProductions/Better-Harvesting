@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "betterharvesting",
+  "version": "${version}",
+  "name": "Better Harvesting",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "Apache 2.0",
+  "icon": "icon.png",
+  "environment": "server",
+  "entrypoints": {
+    "main": [
+      "chase.minecraft.architectury.betterharvesting.fabric.BetterHarvestingFabric"
+    ]
+  },
+  "mixins": [
+    "betterharvesting.mixins.json",
+    "betterharvesting-common.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.19",
+    "minecraft": ">=1.19.4"
+  }
+}
