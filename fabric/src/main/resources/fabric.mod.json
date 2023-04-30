@@ -3,9 +3,13 @@
   "id": "betterharvesting",
   "version": "${version}",
   "name": "Better Harvesting",
-  "description": "",
-  "authors": [],
-  "contact": {},
+  "description": "Adds various harvesting features, enables right click harvest, fast leaf decay, and more.",
+  "authors": ["Drew Chase"],
+  "contact": {
+    "sources": "https://github.com/DcmanProductions/Better-Harvesting",
+    "issues": "https://github.com/DcmanProductions/Better-Harvesting/issues",
+    "homepage": "https://modrinth.com/mod/better-harvesting"
+  },
   "license": "Apache 2.0",
   "icon": "icon.png",
   "environment": "server",
@@ -20,6 +24,7 @@
   ],
   "depends": {
     "fabricloader": ">=0.14.19",
-    "minecraft": ">=1.19.4"
+    "minecraft": ">=1.19.4",
+    "architectury": ">=8.1.79"
   }
 }
