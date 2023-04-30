@@ -2,13 +2,11 @@ package chase.minecraft.architectury.betterharvesting;
 
 
 import chase.minecraft.architectury.betterharvesting.commands.BetterHarvestingCommand;
-import chase.minecraft.architectury.betterharvesting.config.ConfigHandler;
+import chase.minecraft.architectury.betterharvesting.modules.RightClickHarvestModule;
+import chase.minecraft.architectury.betterharvesting.modules.VeinMiningModule;
 import dev.architectury.event.events.common.CommandRegistrationEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class BetterHarvesting
 {
@@ -17,17 +15,8 @@ public class BetterHarvesting
 	
 	public static void init()
 	{
-		ConfigHandler.getInstance().load();
-		RightClickHarvest.init();
+		RightClickHarvestModule.init();
+		VeinMiningModule.init();
 		CommandRegistrationEvent.EVENT.register((dispatcher, context, selection) -> BetterHarvestingCommand.register(dispatcher));
-		Timer timer = new Timer();
-		timer.scheduleAtFixedRate(new TimerTask()
-		{
-			@Override
-			public void run()
-			{
-				log.info(ConfigHandler.getInstance().config);
-			}
-		}, 0, 1000);
 	}
 }
