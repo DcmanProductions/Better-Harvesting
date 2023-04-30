@@ -22,7 +22,7 @@ public abstract class LeavesBlockMixin
 	@Inject(at = @At("RETURN"), method = "tick")
 	void tick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, RandomSource randomSource, CallbackInfo cb)
 	{
-		if (ConfigHandler.getInstance().config.AllowFastLeafDecay)
+		if (ConfigHandler.getConfig().AllowFastLeafDecay)
 		{
 			randomTick(blockState, serverLevel, blockPos, randomSource);
 		}

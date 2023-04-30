@@ -1,4 +1,4 @@
-package chase.minecraft.architectury.betterharvesting;
+package chase.minecraft.architectury.betterharvesting.modules;
 
 import chase.minecraft.architectury.betterharvesting.config.ConfigHandler;
 import dev.architectury.event.EventResult;
@@ -19,11 +19,11 @@ import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.Vec3;
 
-public class RightClickHarvest
+public class RightClickHarvestModule
 {
 	public static void init()
 	{
-		InteractionEvent.RIGHT_CLICK_BLOCK.register(RightClickHarvest::execute);
+		InteractionEvent.RIGHT_CLICK_BLOCK.register(RightClickHarvestModule::execute);
 	}
 	
 	/**
@@ -37,9 +37,8 @@ public class RightClickHarvest
 	 */
 	private static EventResult execute(Player player, InteractionHand hand, BlockPos pos, Direction face)
 	{
-		if (ConfigHandler.getInstance().config.AllowRightClickHarvest)
+		if (ConfigHandler.getConfig().AllowRightClickHarvest)
 		{
-			
 			if (player.getLevel() instanceof ServerLevel level)
 			{
 				if (hand == InteractionHand.MAIN_HAND)
