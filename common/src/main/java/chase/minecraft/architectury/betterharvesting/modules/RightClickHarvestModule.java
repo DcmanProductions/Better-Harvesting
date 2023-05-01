@@ -1,5 +1,6 @@
 package chase.minecraft.architectury.betterharvesting.modules;
 
+import chase.minecraft.architectury.betterharvesting.BetterHarvesting;
 import chase.minecraft.architectury.betterharvesting.config.ConfigHandler;
 import dev.architectury.event.EventResult;
 import dev.architectury.event.events.common.InteractionEvent;
@@ -11,7 +12,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -31,11 +31,11 @@ public class RightClickHarvestModule
 	 *
 	 * @param player The player who triggered the event.
 	 * @param hand   The hand with which the player is interacting with the block (either main hand or off-hand).
-	 * @param pos    The BlockPos parameter represents the position of the block being interacted with. It is a 3D coordinate consisting of x, y, and z values.
+	 * @param hitPos The BlockPos parameter represents the position of the block being interacted with. It is a 3D coordinate consisting of x, y, and z values.
 	 * @param face   The `face` parameter is of type `Direction` and represents the direction that the player is facing when interacting with the block. It can be used to determine which side of the block the player is interacting with.
 	 * @return The method is returning an instance of the EventResult class with the pass() method called on it.
 	 */
-	private static EventResult execute(Player player, InteractionHand hand, BlockPos pos, Direction face)
+	private static EventResult execute(Player player, InteractionHand hand, BlockPos hitPos, Direction face)
 	{
 		if (ConfigHandler.getConfig().AllowRightClickHarvest)
 		{
@@ -43,34 +43,57 @@ public class RightClickHarvestModule
 			{
 				if (hand == InteractionHand.MAIN_HAND)
 				{
+					BlockPos[] positions = new BlockPos[]{hitPos};
+					boolean isVeinMine = ConfigHandler.getConfig().AllowVeinMining && (!ConfigHandler.getConfig().VeinMineOnlyWhenSneaking || (ConfigHandler.getConfig().VeinMineOnlyWhenSneaking && player.isShiftKeyDown()));
 					
-					BlockState state = level.getBlockState(pos);
-					if (state.getBlock() instanceof CropBlock crop)
+					if (BetterHarvesting.isVeinmineKeyDown.containsKey(player))
 					{
-						if (crop.isMaxAge(state))
+						isVeinMine = ConfigHandler.getConfig().AllowVeinMining && BetterHarvesting.isVeinmineKeyDown.get(player);
+					}
+					if (isVeinMine)
+					{
+						positions = VeinMiningModule.getConnectedBlocks(level, hitPos, ConfigHandler.getConfig().VeinMineRange).toArray(BlockPos[]::new);
+					}
+					for (BlockPos pos : positions)
+					{
+						boolean isDamageableItem = player.getMainHandItem().isDamageableItem();
+						if (isDamageableItem)
 						{
-							player.awardStat(Stats.BLOCK_MINED.get(crop));
-							player.causeFoodExhaustion(0.005F);
-							ItemStack stack = new ItemStack(crop.asItem());
-							LootContext.Builder builder = (new LootContext.Builder(level))
-									.withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(pos))
-									.withParameter(LootContextParams.BLOCK_STATE, state)
-									.withOptionalParameter(LootContextParams.THIS_ENTITY, player)
-									.withParameter(LootContextParams.TOOL, player.getMainHandItem());
-							Item seed = crop.getCloneItemStack(level, pos, state).getItem();
-							state.getDrops(builder).forEach((itemStackx) ->
+							int itemDurability = player.getMainHandItem().getMaxDamage() - player.getMainHandItem().getDamageValue();
+							boolean itemBroken = itemDurability < (ConfigHandler.getConfig().VeinMinePreventToolBreaking ? 3 : 0);
+							if (itemBroken)
 							{
-								if (itemStackx.getItem().equals(seed))
+								break;
+							}
+						}
+						BlockState state = level.getBlockState(pos);
+						if (state.getBlock() instanceof CropBlock crop)
+						{
+							if (crop.isMaxAge(state))
+							{
+								player.awardStat(Stats.BLOCK_MINED.get(crop));
+								player.causeFoodExhaustion(0.005F);
+								LootContext.Builder builder = (new LootContext.Builder(level))
+										.withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(pos))
+										.withParameter(LootContextParams.BLOCK_STATE, state)
+										.withOptionalParameter(LootContextParams.THIS_ENTITY, player)
+										.withParameter(LootContextParams.TOOL, player.getMainHandItem());
+								Item seed = crop.getCloneItemStack(level, pos, state).getItem();
+								state.getDrops(builder).forEach((itemStack) ->
 								{
-									itemStackx.setCount(itemStackx.getCount() - 1);
-								}
-								Block.popResource(level, pos, itemStackx);
-							});
-							level.setBlock(pos, state.getBlock().defaultBlockState(), 0);
-							player.getMainHandItem().hurtAndBreak(1, player, l ->
-							{
-								l.broadcastBreakEvent(EquipmentSlot.MAINHAND);
-							});
+									if (itemStack.getItem().equals(seed))
+									{
+										itemStack.setCount(itemStack.getCount() - 1);
+									}
+									Block.popResource(level, hitPos, itemStack);
+								});
+								
+								level.setBlock(pos, state.getBlock().defaultBlockState(), 2);
+								player.getMainHandItem().hurtAndBreak(1, player, serverPlayer ->
+								{
+									serverPlayer.broadcastBreakEvent(EquipmentSlot.MAINHAND);
+								});
+							}
 						}
 					}
 				}
