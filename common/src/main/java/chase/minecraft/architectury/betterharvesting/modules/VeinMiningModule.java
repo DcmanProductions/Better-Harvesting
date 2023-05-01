@@ -1,11 +1,10 @@
 package chase.minecraft.architectury.betterharvesting.modules;
 
-import chase.minecraft.architectury.betterharvesting.BetterHarvesting;
 import chase.minecraft.architectury.betterharvesting.config.ConfigHandler;
 import dev.architectury.event.EventResult;
 import dev.architectury.event.events.common.BlockEvent;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Vec3i;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
@@ -21,33 +20,39 @@ import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class VeinMiningModule
 {
 	public static void init()
 	{
 		BlockEvent.BREAK.register((clientlevel, pos, state, player, xp) -> execute(clientlevel, pos, state, player));
-		
 	}
 	
 	private static EventResult execute(Level clientlevel, BlockPos pos, BlockState state, ServerPlayer player)
 	{
 		if (clientlevel instanceof ServerLevel level)
 		{
+//			for (String item : ConfigHandler.getConfig().VeinMineBlacklist)
+//			{
+//				if (BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString().equalsIgnoreCase(item))
+//				{
+//					return EventResult.pass();
+//				}
+//			}
 			boolean isTreeCapitator = ConfigHandler.getConfig().AllowTreeCapitator && (state.is(BlockTags.LOGS) && (!ConfigHandler.getConfig().TreeCapitatorRequiresTool || (ConfigHandler.getConfig().TreeCapitatorRequiresTool && player.getMainHandItem().is(ItemTags.AXES))));
 			boolean isVeinMine = ConfigHandler.getConfig().AllowVeinMining && (!ConfigHandler.getConfig().VeinMineOnlyWhenSneaking || (ConfigHandler.getConfig().VeinMineOnlyWhenSneaking && player.isCrouching()));
 			
 			if (isVeinMine)
 			{
-				Set<BlockPos> list = getBlocks(level, pos, ConfigHandler.getConfig().VeinMineMaxBlocks);
+				Set<BlockPos> list = getConnectedBlocks(level, pos, ConfigHandler.getConfig().VeinMineRange);
 				breakBlocks(list, player, state, level, pos);
 			} else if (isTreeCapitator)
 			{
-				Set<BlockPos> list = getBlocks(level, pos, ConfigHandler.getConfig().VeinMineMaxBlocks);
+				Set<BlockPos> list = getConnectedBlocks(level, pos, ConfigHandler.getConfig().VeinMineRange);
 				breakBlocks(list, player, state, level, pos);
 			}
 		}
@@ -73,133 +78,75 @@ public class VeinMiningModule
 					Block.popResource(level, center, itemStacks);
 				});
 				state.spawnAfterBreak(level, center, ItemStack.EMPTY, true);
-				player.getMainHandItem().hurtAndBreak(1, player, l ->
+				player.getMainHandItem().hurtAndBreak(1, player, serverPlayer ->
 				{
-					l.broadcastBreakEvent(EquipmentSlot.MAINHAND);
+					serverPlayer.broadcastBreakEvent(EquipmentSlot.MAINHAND);
 				});
+				
 			}
-//			level.blockUpdated(blockPos, Blocks.AIR);
-			level.setBlock(blockPos, Blocks.AIR.defaultBlockState(), 2);
+			boolean isDamageableItem = player.getMainHandItem().isDamageableItem();
+			if (isDamageableItem)
+			{
+				int itemDurability = player.getMainHandItem().getMaxDamage() - player.getMainHandItem().getDamageValue();
+				boolean itemBroken = itemDurability < (ConfigHandler.getConfig().VeinMinePreventToolBreaking ? 3 : 0);
+				if (itemBroken)
+				{
+					break;
+				}
+			}
+			if (!blockPos.equals(center))
+				level.setBlock(blockPos, Blocks.AIR.defaultBlockState(), 2 | 8);
 		}
 	}
 	
-	
-	/**
-	 * This function calculates the set of block positions to be affected by an explosion in a 16x16x16 cube around a given position.
-	 *
-	 * @param level   The server level where the explosion is happening.
-	 * @param fromPos The position of the center of the explosion.
-	 * @return The method is returning a set of BlockPos objects representing the blocks that will be affected by an explosion.
-	 */
-	public static Set<BlockPos> getBlocks(ServerLevel level, BlockPos fromPos, int range)
+	public static Set<BlockPos> getConnectedBlocks(ServerLevel level, BlockPos start, int range)
 	{
-		// Create set of block positions to be affected by the explosion
-		Set<BlockPos> affectedBlocks = new HashSet<>();
-		Block block = level.getBlockState(fromPos).getBlock();
-		if (range < 3)
-			return affectedBlocks;
-		int maxRange = range / 2;
-		int minRange = -maxRange;
-		for (int x = minRange; x < maxRange; ++x)
+		Set<BlockPos> connectedBlocks = new HashSet<>();
+		Block targetBlock = level.getBlockState(start).getBlock();
+		Deque<BlockPos> stack = new ArrayDeque<>();
+		Set<BlockPos> visited = new HashSet<>();
+		stack.push(start);
+		
+		while (!stack.isEmpty())
 		{
-			for (int y = minRange; y < maxRange; ++y)
+			BlockPos currentPos = stack.pop();
+			if (!visited.add(currentPos))
 			{
-				for (int z = minRange; z < maxRange; z++)
+				continue; // skip already visited blocks
+			}
+			connectedBlocks.add(currentPos);
+			
+			for (int dx = -1; dx <= 1; dx++)
+			{
+				for (int dy = -1; dy <= 1; dy++)
 				{
-					BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-					// Loop through until explosion radius is zero
-					for (int i = 0; i < range; i++)
+					for (int dz = -1; dz <= 1; dz++)
 					{
-						pos.setWithOffset(fromPos, x, y, z);
-						
-						// Check if position is within world bounds
-						if (!level.isInWorldBounds(pos))
+						if (dx == 0 && dy == 0 && dz == 0)
 						{
-							break;
+							continue; // skip current block
 						}
-						if (level.getBlockState(pos).getBlock().equals(block))
-							affectedBlocks.add(pos);
+						BlockPos neighbor = currentPos.offset(dx, dy, dz);
+						if (!isWithinRange(start, neighbor, range))
+						{
+							continue; // skip out-of-range blocks
+						}
+						BlockState neighborState = level.getBlockState(neighbor);
+						Block neighborBlock = neighborState.getBlock();
+						if (neighborBlock == targetBlock)
+						{
+							stack.push(neighbor); // add to stack for processing
+						}
 					}
 				}
 			}
 		}
-		if (ConfigHandler.getConfig().VeinMineOnlyConnectedBlocks)
-			return getConnectedBlockPositions(sortBlockPosByClosest(affectedBlocks, fromPos));
-		return affectedBlocks;
-	}
-	
-	private static Set<BlockPos> sortBlockPosByClosest(Set<BlockPos> list, BlockPos startPos)
-	{
-		try
-		{
-			
-			return list.stream().sorted((a, b) ->
-			{
-				int distanceA = (int) a.distToCenterSqr(startPos.getCenter());
-				int distanceB = (int) b.distToCenterSqr(startPos.getCenter());
-				return Integer.compare(distanceA, distanceB);
-			}).collect(Collectors.toCollection(LinkedHashSet::new));
-		} catch (Exception e)
-		{
-			BetterHarvesting.log.error("Unable to sort list: {}", e.getMessage(), e);
-		}
-		return list;
-	}
-	
-	private static Set<BlockPos> getConnectedBlockPositions(Set<BlockPos> list)
-	{
-		Set<BlockPos> connected = new HashSet<>();
-		Set<BlockPos> visited = new HashSet<>();
-		for (BlockPos pos : list)
-		{
-			if (!visited.contains(pos))
-			{
-				distanceFromSource(pos, list, visited, connected);
-			}
-		}
-		return connected;
-	}
-	private static final Vec3i[] DIRECTIONS = new Vec3i[]{
-			new Vec3i(0, 1, 0),
-			new Vec3i(1, 1, 0),
-			new Vec3i(-1, 1, 0),
-			new Vec3i(0, 1, 1),
-			new Vec3i(0, 1, -1),
-			new Vec3i(1, 0, 0),
-			new Vec3i(-1, 0, 0),
-			new Vec3i(0, 0, 1),
-			new Vec3i(0, 0, -1),
-			new Vec3i(0, -1, 0),
-			new Vec3i(1, -1, 0),
-			new Vec3i(-1, -1, 0),
-			new Vec3i(0, -1, 1),
-			new Vec3i(0, -1, -1),
-			new Vec3i(1, 1, 1),
-			new Vec3i(1, 1, -1),
-			new Vec3i(-1, 1, -1),
-			new Vec3i(-1, 1, 1),
-			new Vec3i(1, 0, 1),
-			new Vec3i(1, 0, -1),
-			new Vec3i(-1, 0, -1),
-			new Vec3i(-1, 0, 1),
-			new Vec3i(1, -1, 1),
-			new Vec3i(1, -1, -1),
-			new Vec3i(-1, -1, -1),
-			new Vec3i(-1, -1, 1)
-	};
-	private static void distanceFromSource(BlockPos pos, Set<BlockPos> list, Set<BlockPos> visited, Set<BlockPos> connected)
-	{
 		
-		visited.add(pos);
-		connected.add(pos);
-		BlockPos.MutableBlockPos neighbor = new BlockPos.MutableBlockPos();
-		for (Vec3i direction : DIRECTIONS)
-		{
-			neighbor.setWithOffset(pos, direction);
-			if (list.contains(neighbor) && !visited.contains(neighbor))
-			{
-				distanceFromSource(neighbor, list, visited, connected);
-			}
-		}
+		return connectedBlocks;
+	}
+	
+	private static boolean isWithinRange(BlockPos pos1, BlockPos pos2, int range)
+	{
+		return pos1.distManhattan(pos2) <= range;
 	}
 }
