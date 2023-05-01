@@ -19,7 +19,7 @@ public class AutoReplantSaplingsModule
 		{
 			if (item.getItem().getTags().anyMatch(i -> SAPLINGS == i))
 			{
-				if (item.getAge() >= ConfigHandler.getConfig().AutoSaplingPlaceAfterTicks)
+				if (item.getAge() >= ConfigHandler.getConfig().AutoPlantSaplingAfterTicks)
 				{
 					Level level = item.level;
 					BlockPos groundPos = item.getOnPos();
