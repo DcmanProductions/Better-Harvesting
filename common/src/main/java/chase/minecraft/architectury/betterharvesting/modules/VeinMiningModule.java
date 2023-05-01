@@ -1,17 +1,19 @@
 package chase.minecraft.architectury.betterharvesting.modules;
 
+import chase.minecraft.architectury.betterharvesting.BetterHarvesting;
 import chase.minecraft.architectury.betterharvesting.config.ConfigHandler;
 import dev.architectury.event.EventResult;
 import dev.architectury.event.events.common.BlockEvent;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.DiggerItem;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -36,23 +38,42 @@ public class VeinMiningModule
 	{
 		if (clientlevel instanceof ServerLevel level)
 		{
-//			for (String item : ConfigHandler.getConfig().VeinMineBlacklist)
-//			{
-//				if (BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString().equalsIgnoreCase(item))
-//				{
-//					return EventResult.pass();
-//				}
-//			}
+			if (state.is(BlockTags.BEDS) || state.is(BlockTags.DOORS) || state.is(BlockTags.WOOL_CARPETS))
+				return EventResult.pass();
+			
 			boolean isTreeCapitator = ConfigHandler.getConfig().AllowTreeCapitator && (state.is(BlockTags.LOGS) && (!ConfigHandler.getConfig().TreeCapitatorRequiresTool || (ConfigHandler.getConfig().TreeCapitatorRequiresTool && player.getMainHandItem().is(ItemTags.AXES))));
-			boolean isVeinMine = ConfigHandler.getConfig().AllowVeinMining && (!ConfigHandler.getConfig().VeinMineOnlyWhenSneaking || (ConfigHandler.getConfig().VeinMineOnlyWhenSneaking && player.isCrouching()));
+			boolean isVeinMine = ConfigHandler.getConfig().AllowVeinMining && (!ConfigHandler.getConfig().VeinMineOnlyWhenSneaking || (ConfigHandler.getConfig().VeinMineOnlyWhenSneaking && player.isShiftKeyDown()));
+			
+			if (BetterHarvesting.isVeinmineKeyDown.containsKey(player))
+			{
+				isVeinMine = ConfigHandler.getConfig().AllowVeinMining && BetterHarvesting.isVeinmineKeyDown.get(player);
+			}
+			
+			if (!player.isCreative() && state.requiresCorrectToolForDrops())
+			{
+				if (player.getMainHandItem().getItem() instanceof DiggerItem diggerItem)
+				{
+					if (!diggerItem.isCorrectToolForDrops(state))
+					{
+						return EventResult.pass();
+					}
+				} else
+				{
+					return EventResult.pass();
+				}
+			}
 			
 			if (isVeinMine)
 			{
+				if (ConfigHandler.getConfig().VeinMineRange <= 0)
+					return EventResult.pass();
 				Set<BlockPos> list = getConnectedBlocks(level, pos, ConfigHandler.getConfig().VeinMineRange);
 				breakBlocks(list, player, state, level, pos);
 			} else if (isTreeCapitator)
 			{
-				Set<BlockPos> list = getConnectedBlocks(level, pos, ConfigHandler.getConfig().VeinMineRange);
+				if (ConfigHandler.getConfig().TreeCapitatorRange <= 0)
+					return EventResult.pass();
+				Set<BlockPos> list = getConnectedBlocks(level, pos, ConfigHandler.getConfig().TreeCapitatorRange);
 				breakBlocks(list, player, state, level, pos);
 			}
 		}
@@ -68,16 +89,25 @@ public class VeinMiningModule
 			if (!player.isCreative())
 			{
 				player.causeFoodExhaustion(0.01F);
+				
 				LootContext.Builder builder = (new LootContext.Builder(level))
 						.withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(center))
 						.withParameter(LootContextParams.BLOCK_STATE, state)
 						.withOptionalParameter(LootContextParams.THIS_ENTITY, player)
 						.withParameter(LootContextParams.TOOL, player.getMainHandItem());
-				state.getDrops(builder).forEach((itemStacks) ->
+				if (EnchantmentHelper.hasSilkTouch(player.getMainHandItem()))
 				{
-					Block.popResource(level, center, itemStacks);
-				});
-				state.spawnAfterBreak(level, center, ItemStack.EMPTY, true);
+					state.getDrops(builder).forEach((itemStack) ->
+					{
+						ItemEntity entity = new ItemEntity(level, center.getCenter().x, center.getCenter().y, center.getCenter().z, itemStack);
+						entity.setDefaultPickUpDelay();
+						level.addFreshEntity(entity);
+					});
+				} else
+				{
+					
+					Block.dropResources(state, builder);
+				}
 				player.getMainHandItem().hurtAndBreak(1, player, serverPlayer ->
 				{
 					serverPlayer.broadcastBreakEvent(EquipmentSlot.MAINHAND);
@@ -94,8 +124,7 @@ public class VeinMiningModule
 					break;
 				}
 			}
-			if (!blockPos.equals(center))
-				level.setBlock(blockPos, Blocks.AIR.defaultBlockState(), 2 | 8);
+			level.setBlock(blockPos, Blocks.AIR.defaultBlockState(), 2 | 8);
 		}
 	}
 	
