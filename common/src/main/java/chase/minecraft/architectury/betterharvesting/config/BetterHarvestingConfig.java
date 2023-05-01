@@ -11,5 +11,7 @@ public class BetterHarvestingConfig
 	public boolean AllowVeinMining = true;
 	public boolean VeinMineOnlyWhenSneaking = true;
 	public int VeinMineMaxBlocks = 5;
+	public String[] VeinMineBlacklist = new String[0];
 	
+	public boolean VeinMineOnlyConnectedBlocks = true;
 }
