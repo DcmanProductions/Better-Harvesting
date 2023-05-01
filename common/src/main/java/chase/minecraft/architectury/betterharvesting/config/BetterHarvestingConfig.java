@@ -11,6 +11,7 @@ public class BetterHarvestingConfig
 	public boolean AllowVeinMining = true;
 	public boolean VeinMineOnlyWhenSneaking = true;
 	public int VeinMineRange = 5;
+	public int TreeCapitatorRange = 5;
 	public boolean VeinMinePreventToolBreaking = true;
 //	public String[] VeinMineBlacklist = new String[]{
 //
