@@ -38,8 +38,14 @@ public class AutoReplantSaplingsModule
 						{
 							BetterHarvesting.log.error("Unable to plant sapling before despawn: {}, at: [X: {}, Y: {}, Z:{}], {}", item.getName().getString(), spawnPos.getX(), spawnPos.getY(), spawnPos.getZ(), e.getMessage());
 						}
-						
-						item.discard();
+						if (item.getItem().getCount() == 1)
+						{
+							item.discard();
+						} else
+						{
+							
+							item.getItem().setCount(item.getItem().getCount() - 1);
+						}
 					}
 					
 				}
