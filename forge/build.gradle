@@ -23,6 +23,9 @@ dependencies {
 
     common(project(path: ":common", configuration: "namedElements")) { transitive false }
     shadowCommon(project(path: ":common", configuration: "transformProductionForge")) { transitive = false }
+
+    // Bad Packets
+    modRuntimeOnly "lol.bai:badpackets:forge-${badpackets_version}"
 }
 
 processResources {
