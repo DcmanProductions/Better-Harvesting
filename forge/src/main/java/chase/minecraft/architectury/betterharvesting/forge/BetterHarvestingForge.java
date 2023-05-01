@@ -14,7 +14,6 @@ public class BetterHarvestingForge
 		// Submit our event bus to let architectury register our content on the right time
 		EventBuses.registerModEventBus(BetterHarvesting.MOD_ID, FMLJavaModLoadingContext.get().getModEventBus());
 		BetterHarvesting.init();
-		BetterHarvestingClient.init();
 	}
 }
 
