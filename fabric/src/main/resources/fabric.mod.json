@@ -12,10 +12,13 @@
   },
   "license": "Apache 2.0",
   "icon": "icon.png",
-  "environment": "server",
+  "environment": "*",
   "entrypoints": {
     "main": [
       "chase.minecraft.architectury.betterharvesting.fabric.BetterHarvestingFabric"
+    ],
+    "client": [
+      "chase.minecraft.architectury.betterharvesting.fabric.BetterHarvestingClientFabric"
     ]
   },
   "mixins": [

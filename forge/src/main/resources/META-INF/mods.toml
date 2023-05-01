@@ -72,6 +72,6 @@ side = "SERVER"
 modId = "architectury"
 mandatory = true
 # This version range declares a minimum of the current minecraft version up to but not including the next major version
-versionRange = "[8.1.79,"
+versionRange = "[8.1.79,)"
 ordering = "NONE"
-side = "SERVER"
+side = "BOTH"
