@@ -15,10 +15,8 @@
 - `/betterharvesting [VeinMinePreventToolBreaking] [<value>]` - Sets if Veinmine/Treecapitator should stop before you're tool breaks
 
 # Features
-
 All features are able to be modified via the config.
-
-1. RightClickHarvest![img](images/rightclickharvest.gif)
-2. FastLeafDecay![img](images/fastleafdecay.gif)
-3. TreeCapitator![img](images/treecapitator.gif)
-4. VeinMining![img](images/veinmine.gif)
+1. RightClickHarvest![img](https://github.com/DcmanProductions/Better-Harvesting/raw/master/images/rightclickharvest.gif)
+2. FastLeafDecay![img](https://github.com/DcmanProductions/Better-Harvesting/raw/master/images/fastleafdecay.gif)
+3. TreeCapitator![img](https://github.com/DcmanProductions/Better-Harvesting/raw/master/images/treecapitator.gif)
+4. VeinMining![img](https://github.com/DcmanProductions/Better-Harvesting/raw/master/images/veinmine.gif)
