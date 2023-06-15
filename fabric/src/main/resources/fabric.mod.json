@@ -32,6 +32,6 @@
     "minecraft": ">=${minecraft}",
     "architectury": ">=${architectury}",
     "badpackets": ">=${badpackets}",
-    "fabric-api": ">=${api}"
+    "fabric": ">=${api}"
   }
 }

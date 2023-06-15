@@ -36,14 +36,14 @@ public class BetterHarvestingCommand
 				.requires((commandSourceStack) -> commandSourceStack.hasPermission(4))
 				.executes(context ->
 				{
-					context.getSource().sendSystemMessage(ConfigHandler.getInstance().getAll());
+					context.getSource().sendSuccess(ConfigHandler.getInstance().getAll(), true);
 					return 1;
 				})
 				.then(literal("reload")
 						.executes(context ->
 						{
 							ConfigHandler.getInstance().load();
-							context.getSource().sendSystemMessage(Component.literal("[Better Harvesting] reloaded config"));
+							context.getSource().sendSuccess(Component.literal("[Better Harvesting] reloaded config"), true);
 							return 1;
 						}));
 		for (String field : ConfigHandler.getInstance().suggestions())
@@ -97,7 +97,7 @@ public class BetterHarvestingCommand
 			return false;
 		}
 		ConfigHandler.getInstance().set(name, value);
-		context.getSource().sendSystemMessage(Objects.requireNonNull(ConfigHandler.getInstance().getAsComponent(name)));
+		context.getSource().sendSuccess(Objects.requireNonNull(ConfigHandler.getInstance().getAsComponent(name)), true);
 		return true;
 	}
 	
@@ -108,7 +108,7 @@ public class BetterHarvestingCommand
 			context.getSource().sendFailure(Component.literal("[Better Harvesting] Config does NOT exist: %s".formatted(name)).withStyle(ChatFormatting.RED));
 			return false;
 		}
-		context.getSource().sendSystemMessage(Objects.requireNonNull(ConfigHandler.getInstance().getAsComponent(name)));
+		context.getSource().sendSuccess(Objects.requireNonNull(ConfigHandler.getInstance().getAsComponent(name)), true);
 		return true;
 	}
 	
