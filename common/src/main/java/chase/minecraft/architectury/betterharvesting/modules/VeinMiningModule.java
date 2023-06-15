@@ -9,11 +9,13 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.DiggerItem;
+import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -22,10 +24,8 @@ import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+
 
 public class VeinMiningModule
 {
@@ -41,7 +41,7 @@ public class VeinMiningModule
 			if (state.is(BlockTags.BEDS) || state.is(BlockTags.DOORS) || state.is(BlockTags.WOOL_CARPETS))
 				return EventResult.pass();
 			
-			boolean isTreeCapitator = ConfigHandler.getConfig().AllowTreeCapitator && (state.is(BlockTags.LOGS) && (!ConfigHandler.getConfig().TreeCapitatorRequiresTool || (ConfigHandler.getConfig().TreeCapitatorRequiresTool && player.getMainHandItem().is(ItemTags.AXES))));
+			boolean isTreeCapitator = ConfigHandler.getConfig().AllowTreeCapitator && (state.is(BlockTags.LOGS) && (!ConfigHandler.getConfig().TreeCapitatorRequiresTool || (ConfigHandler.getConfig().TreeCapitatorRequiresTool && player.getMainHandItem().getItem() instanceof AxeItem)));
 			boolean isVeinMine = ConfigHandler.getConfig().AllowVeinMining && (!ConfigHandler.getConfig().VeinMineOnlyWhenSneaking || (ConfigHandler.getConfig().VeinMineOnlyWhenSneaking && player.isShiftKeyDown()));
 			
 			if (BetterHarvesting.isVeinmineKeyDown.containsKey(player))
@@ -95,18 +95,28 @@ public class VeinMiningModule
 						.withParameter(LootContextParams.BLOCK_STATE, state)
 						.withOptionalParameter(LootContextParams.THIS_ENTITY, player)
 						.withParameter(LootContextParams.TOOL, player.getMainHandItem());
-				if (EnchantmentHelper.hasSilkTouch(player.getMainHandItem()))
+				boolean hasSilkTouch = false;
+				for (Enchantment enchantment : EnchantmentHelper.getEnchantments(player.getMainHandItem()).keySet())
+				{
+					if (Objects.equals(EnchantmentHelper.getEnchantmentId(Enchantments.SILK_TOUCH), EnchantmentHelper.getEnchantmentId(enchantment)))
+					{
+						hasSilkTouch = true;
+						break;
+					}
+				}
+				
+				if (hasSilkTouch)
 				{
 					state.getDrops(builder).forEach((itemStack) ->
 					{
-						ItemEntity entity = new ItemEntity(level, center.getCenter().x, center.getCenter().y, center.getCenter().z, itemStack);
+						ItemEntity entity = new ItemEntity(level, center.getX(), center.getY(), center.getZ(), itemStack);
 						entity.setDefaultPickUpDelay();
 						level.addFreshEntity(entity);
 					});
 				} else
 				{
 					
-					Block.dropResources(state, builder);
+					Block.dropResources(state, level, blockPos);
 				}
 				player.getMainHandItem().hurtAndBreak(1, player, serverPlayer ->
 				{
