@@ -1,3 +1,6 @@
+# Description
+CurseForge:  
+[![CurseForge](https://cf.way2muchnoise.eu/856924.svg) ![](https://cf.way2muchnoise.eu/versions/856924.svg)](https://www.curseforge.com/minecraft/mc-mods/better-harvesting)
 # Config Commands
 
 - `/betterharvesting` - Gets the value of all config items
