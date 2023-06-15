@@ -21,7 +21,7 @@ public class AutoReplantSaplingsModule
 			{
 				if (item.getAge() >= ConfigHandler.getConfig().AutoPlantSaplingAfterTicks)
 				{
-					Level level = item.level;
+					Level level = item.level();
 					BlockPos groundPos = item.getOnPos();
 					BlockPos spawnPos = groundPos.above();
 					BlockState groundState = level.getBlockState(groundPos);

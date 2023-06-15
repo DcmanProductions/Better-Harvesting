@@ -18,7 +18,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.Vec3;
 
@@ -90,7 +90,7 @@ public class VeinMiningModule
 			{
 				player.causeFoodExhaustion(0.01F);
 				
-				LootContext.Builder builder = (new LootContext.Builder(level))
+				LootParams.Builder builder = (new LootParams.Builder(level))
 						.withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(center))
 						.withParameter(LootContextParams.BLOCK_STATE, state)
 						.withOptionalParameter(LootContextParams.THIS_ENTITY, player)
@@ -106,7 +106,7 @@ public class VeinMiningModule
 				} else
 				{
 					
-					Block.dropResources(state, builder);
+					Block.dropResources(state, level, blockPos);
 				}
 				player.getMainHandItem().hurtAndBreak(1, player, serverPlayer ->
 				{

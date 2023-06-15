@@ -3,8 +3,10 @@
   "id": "betterharvesting",
   "version": "${version}",
   "name": "Better Harvesting",
-  "description": "Adds various harvesting features, enables right click harvest, fast leaf decay, and more.",
-  "authors": ["Drew Chase"],
+  "description": "${description}",
+  "authors": [
+    "Drew Chase"
+  ],
   "contact": {
     "sources": "https://github.com/DcmanProductions/Better-Harvesting",
     "issues": "https://github.com/DcmanProductions/Better-Harvesting/issues",
@@ -26,8 +28,10 @@
     "betterharvesting-common.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.14.19",
-    "minecraft": ">=1.19.4",
-    "architectury": ">=8.1.79"
+    "fabricloader": ">=${loader}",
+    "minecraft": ">=${minecraft}",
+    "architectury": ">=${architectury}",
+    "badpackets": ">=${badpackets}",
+    "fabric-api": ">=${api}"
   }
 }

@@ -5,6 +5,7 @@ import chase.minecraft.architectury.betterharvesting.commands.BetterHarvestingCo
 import chase.minecraft.architectury.betterharvesting.modules.RightClickHarvestModule;
 import chase.minecraft.architectury.betterharvesting.modules.VeinMiningModule;
 import chase.minecraft.architectury.betterharvesting.networking.BetterHarvestingNetworking;
+import com.mojang.brigadier.Command;
 import dev.architectury.event.events.common.CommandRegistrationEvent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -24,7 +25,7 @@ public class BetterHarvesting
 		RightClickHarvestModule.init();
 		VeinMiningModule.init();
 		BetterHarvestingNetworking.ServerNetworking.init();
-		CommandRegistrationEvent.EVENT.register((dispatcher, context, selection) -> BetterHarvestingCommand.register(dispatcher));
+		CommandRegistrationEvent.EVENT.register((dispatcher, registry, selection) -> BetterHarvestingCommand.register(dispatcher));
 	}
 	
 	/**

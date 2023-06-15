@@ -32,7 +32,13 @@ processResources {
     inputs.property "version", project.version
 
     filesMatching("META-INF/mods.toml") {
-        expand "version": project.version
+        expand([
+                "version"      : rootProject.mod_version,
+                "architectury" : rootProject.architectury_version,
+                "minecraft"    : rootProject.minecraft_version,
+                "badpackets"   : badpackets_version,
+                "description"  : rootProject.description,
+        ])
     }
 }
 
@@ -40,17 +46,17 @@ shadowJar {
     exclude "fabric.mod.json"
 
     configurations = [project.configurations.shadowCommon]
-    classifier "dev-shadow"
+    archiveClassifier.set("dev-shadow")
 }
 
 remapJar {
     input.set shadowJar.archiveFile
     dependsOn shadowJar
-    classifier null
+    archiveClassifier.set(null)
 }
 
 jar {
-    classifier "dev"
+    archiveClassifier.set("dev")
 }
 
 sourcesJar {

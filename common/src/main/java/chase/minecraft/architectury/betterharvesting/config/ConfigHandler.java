@@ -122,7 +122,6 @@ public class ConfigHandler
 	
 	public Component getAll()
 	{
-		
 		MutableComponent component = Component.literal("Better Harvesting Configuration:\n").withStyle(ChatFormatting.AQUA);
 		for (Component field : Arrays.stream(suggestions()).map(this::getAsComponent).toArray(Component[]::new))
 		{

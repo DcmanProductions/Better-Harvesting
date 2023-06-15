@@ -12,7 +12,6 @@ import net.minecraft.network.chat.Component;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 
 import static com.mojang.brigadier.arguments.BoolArgumentType.bool;
 import static com.mojang.brigadier.arguments.BoolArgumentType.getBool;
@@ -37,14 +36,14 @@ public class BetterHarvestingCommand
 				.requires((commandSourceStack) -> commandSourceStack.hasPermission(4))
 				.executes(context ->
 				{
-					context.getSource().sendSuccess(ConfigHandler.getInstance().getAll(), true);
+					context.getSource().sendSystemMessage(ConfigHandler.getInstance().getAll());
 					return 1;
 				})
 				.then(literal("reload")
 						.executes(context ->
 						{
 							ConfigHandler.getInstance().load();
-							context.getSource().sendSuccess(Component.literal("[Better Harvesting] reloaded config"), true);
+							context.getSource().sendSystemMessage(Component.literal("[Better Harvesting] reloaded config"));
 							return 1;
 						}));
 		for (String field : ConfigHandler.getInstance().suggestions())
@@ -76,7 +75,7 @@ public class BetterHarvestingCommand
 										})))
 						.then(literal("remove")
 								.then(argument("value", string())
-										.suggests((context, builder)-> SharedSuggestionProvider.suggest(list, builder))
+										.suggests((context, builder) -> SharedSuggestionProvider.suggest(list, builder))
 										.executes(ctx ->
 										{
 											List<String> tmp = new java.util.ArrayList<>(Arrays.stream(list).toList());
@@ -98,7 +97,7 @@ public class BetterHarvestingCommand
 			return false;
 		}
 		ConfigHandler.getInstance().set(name, value);
-		context.getSource().sendSuccess(Objects.requireNonNull(ConfigHandler.getInstance().getAsComponent(name)), true);
+		context.getSource().sendSystemMessage(Objects.requireNonNull(ConfigHandler.getInstance().getAsComponent(name)));
 		return true;
 	}
 	
@@ -109,7 +108,7 @@ public class BetterHarvestingCommand
 			context.getSource().sendFailure(Component.literal("[Better Harvesting] Config does NOT exist: %s".formatted(name)).withStyle(ChatFormatting.RED));
 			return false;
 		}
-		context.getSource().sendSuccess(Objects.requireNonNull(ConfigHandler.getInstance().getAsComponent(name)), true);
+		context.getSource().sendSystemMessage(Objects.requireNonNull(ConfigHandler.getInstance().getAsComponent(name)));
 		return true;
 	}
 	

@@ -45,7 +45,7 @@ authors = "Drew Chase"
 
 # The description text for the mod (multi line!) (#mandatory)
 description = '''
-Adds various harvesting features, enables right click harvest, fast leaf decay, and more.
+${description}
 '''
 # A dependency - use the . to indicate dependency for a specific modid. Dependencies are optional.
 [[dependencies.betterharvesting]] #optional
@@ -64,7 +64,7 @@ side = "BOTH"
 modId = "minecraft"
 mandatory = true
 # This version range declares a minimum of the current minecraft version up to but not including the next major version
-versionRange = "[1.19.4,1.20)"
+versionRange = "[${minecraft},)"
 ordering = "NONE"
 side = "BOTH"
 
@@ -72,6 +72,14 @@ side = "BOTH"
 modId = "architectury"
 mandatory = true
 # This version range declares a minimum of the current minecraft version up to but not including the next major version
-versionRange = "[8.1.79,)"
+versionRange = "[${architectury},)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.betterharvesting]]
+modId = "badpackets"
+mandatory = true
+# This version range declares a minimum of the current minecraft version up to but not including the next major version
+versionRange = "[${badpackets},)"
 ordering = "NONE"
 side = "BOTH"
